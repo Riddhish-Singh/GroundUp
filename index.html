@@ -7,7 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <style>
-        /* Base styles */
+        /* Base styles to replicate the professional, tabular look */
         body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
         .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border: 1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.1); } 
 
@@ -42,7 +42,7 @@
         .payslip-table th, .payslip-table td { border: 1px solid #000; padding: 8px; text-align: left; }
         .payslip-table th { background-color: #eee; font-weight: bold; text-align: center; }
 
-        /* Employee Details Section */
+        /* Employee Details Section (Replicates the two-column layout) */
         .payslip-details { margin-bottom: 15px; }
         .payslip-details table { width: 100%; border-collapse: collapse; table-layout: fixed;}
         .payslip-details td { padding: 5px 10px; border: 1px solid #000; font-size: 0.9rem; }
@@ -150,9 +150,9 @@
                     <input type="number" id="input_loan" value="0" min="0">
                 </div>
 
-                <button type="submit">Generate / Update Payslip & Save PDF</button>
+                <button type="submit">Generate / Update Payslip</button>
                 
-                <button type="button" onclick="window.print()" style="background-color: #28a745;">Print</button>
+                <button type="button" onclick="window.print()" style="background-color: #28a745;">Print (or Save as PDF)</button>
                 
                 <button type="button" id="shareEmailBtn" style="background-color: #17a2b8;">Share via Email</button>
 
@@ -178,9 +178,7 @@
                     <tr>
                          <td class="label">Unpaid Leaves (Days)</td>
                         <td class="value" id="slip_unpaid_leaves"></td>
-                        <td class="label"></td>
-                        <td class="value"></td>
-                    </tr>
+                        <td class="label"></td> <td class="value"></td> </tr>
                 </table>
             </div>
 
@@ -249,51 +247,17 @@
 </div>
 
 <script>
-    // --- UPDATED: Form submit now calls savePayslipAsPDF ---
     document.getElementById('salaryForm').addEventListener('submit', function(event) {
         event.preventDefault();
-        // This function now updates the slip AND saves the PDF
-        savePayslipAsPDF();
+        generatePayslip();
     });
 
-    // --- RE-ADDED savePayslipAsPDF() function ---
-    function savePayslipAsPDF() {
-        // 1. Ensure data is up-to-date on screen
-        generatePayslip(); 
+    // --- REMOVED savePayslipAsPDF() function ---
+    // --- REMOVED savePayslipAsDOC() function ---
 
-        const monthYear = document.getElementById('slip_month_display').textContent.replace(/\s/g, '_');
-        const name = document.getElementById('input_name').value;
-        const filename = `Payslip_${name}_${monthYear}.pdf`;
-
-        // Get the elements
-        const formElement = document.querySelector('.input-form');
-        const containerElement = document.getElementById('payslip-container');
-
-        // 2. Temporarily hide the form and remove borders for a clean PDF
-        formElement.style.display = 'none'; 
-        containerElement.style.boxShadow = 'none'; 
-        containerElement.style.border = 'none'; 
-        
-        const options = {
-            margin: 10,
-            filename: filename,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        // 3. Generate the PDF and trigger download
-        html2pdf().set(options).from(containerElement).save().then(() => {
-            // 4. Restore the form and styles after PDF is saved
-            formElement.style.display = 'block';
-            containerElement.style.boxShadow = '0 0 10px rgba(0,0,0,0.1)';
-            containerElement.style.border = '1px solid #ccc';
-        });
-    }
-
-    // --- Event Listener for Share Button (Unchanged) ---
+    // --- UPDATED: Event Listener for Share Button (Gmail specific) ---
     document.getElementById('shareEmailBtn').addEventListener('click', function() {
-        // Ensure payslip data is current before sharing
+        // Ensure payslip data is current
         generatePayslip();
 
         const fullName = document.getElementById('input_name').value;
@@ -304,23 +268,32 @@
             return;
         }
 
+        // Derive email from first name per your request
         const firstName = fullName.split(' ')[0].toLowerCase();
         const emailTo = `${firstName}@groundupasia.com`;
         const cc = 'harvinder@groundupasia.com';
+
         const subject = `Salary Slip for ${fullName} - ${month}`;
-        const body = `Hi ${fullName.split(' ')[0]},\n\nPlease find your salary slip for ${month} attached.\n\n(Note for sender: The PDF was already downloaded when you clicked 'Generate'. Please attach that file to this email.)\n\nBest regards,\nGroundup`;
+        // Updated body to reflect the new "Print to PDF" workflow
+        const body = `Hi ${fullName.split(' ')[0]},\n\nPlease find your salary slip for ${month} attached.\n\n(Note for sender: Please use the 'Print (or Save as PDF)' button to create the payslip file to attach to this email.)\n\nBest regards,\nGroundup`;
         
+        // Base Gmail URL
         let gmailURL = `https://mail.google.com/mail/?view=cm&fs=1`;
+        
+        // Add parameters
         gmailURL += `&to=${encodeURIComponent(emailTo)}`;
         gmailURL += `&cc=${encodeURIComponent(cc)}`;
-        gmailURL += `&su=${encodeURIComponent(subject)}`;
+        gmailURL += `&su=${encodeURIComponent(subject)}`; // 'su' is subject for Gmail
         gmailURL += `&body=${encodeURIComponent(body)}`;
         
+        // Open Gmail in a new tab
         window.open(gmailURL, '_blank');
     });
 
+    // --- REMOVED Event Listener for saveDocBtn ---
 
-    // --- Helper function to convert number to Indian currency words (Unchanged) ---
+
+    // Helper function to convert number to Indian currency words
     function numberToWords(n) {
         if (n === 0) return "ZERO RUPEES ONLY";
         
@@ -364,7 +337,7 @@
         return (output.trim() + ' Rupees Only').toUpperCase().replace(/\s+/g, ' ');
     }
 
-    // --- Helper function for Indian currency formatting (Unchanged) ---
+    // Helper function for Indian currency formatting
     function formatCurrency(amount) {
         return parseFloat(amount).toLocaleString('en-IN', {
             style: 'decimal', 
@@ -373,13 +346,13 @@
         });
     }
 
-    // --- Main function to populate slip data (Unchanged) ---
     function generatePayslip() {
         // --- 1. Get Input Values ---
         const monthInput = document.getElementById('input_month').value;
         const monthYear = new Date(monthInput + '-01').toLocaleString('en-US', { month: 'long', year: 'numeric' });
 
         const name = document.getElementById('input_name').value;
+        // REMOVED email const
         const designation = document.getElementById('input_designation').value;
         const pan = document.getElementById('input_pan').value;
         
@@ -407,6 +380,7 @@
         
         // Employee Details
         document.getElementById('slip_name').textContent = name;
+        // REMOVED email populate
         document.getElementById('slip_designation').textContent = designation;
         document.getElementById('slip_pan').textContent = pan;
         document.getElementById('slip_paid_leaves').textContent = paidLeaves;
