@@ -107,6 +107,10 @@
                     <input type="text" id="input_name" value="Preety" required>
                 </div>
                 <div class="form-group">
+                    <label for="input_email">Employee Email:</label>
+                    <input type="email" id="input_email" value="preety@example.com" required>
+                </div>
+                <div class="form-group">
                     <label for="input_designation">Designation:</label>
                     <input type="text" id="input_designation" value="Regional Manager">
                 </div>
@@ -157,6 +161,10 @@
                 <button type="button" onclick="window.print()" style="background-color: #28a745;">Print Payslip</button>
                 
                 <button type="button" onclick="savePayslipAsPDF()" style="background-color: #dc3545;">Save as PDF</button>
+                
+                <button type="button" id="saveDocBtn" style="background-color: #ffc107; color: #000; margin-top: 10px;">Save as DOC</button>
+                <button type="button" id="shareEmailBtn" style="background-color: #17a2b8; margin-top: 10px;">Share via Email</button>
+
             </form>
         </div>
 
@@ -177,8 +185,8 @@
                         <td class="value" id="slip_paid_leaves"></td>
                     </tr>
                     <tr>
-                         <td class="label">Region</td>
-                        <td class="value" id="slip_region"></td>
+                         <td class="label">Employee Email</td>
+                        <td class="value" id="slip_email"></td>
                         <td class="label">Unpaid Leaves (Days)</td>
                         <td class="value" id="slip_unpaid_leaves"></td>
                     </tr>
@@ -221,9 +229,9 @@
                         <td></td>
                     </tr>
                     <tr class="total-row">
-                        <td>**TOTAL EARNINGS**</td>
+                        <td><b>TOTAL EARNINGS</b></td>
                         <td class="amount" id="slip_total_earnings"></td>
-                        <td>**TOTAL DEDUCTIONS**</td>
+                        <td><b>TOTAL DEDUCTIONS</b></td>
                         <td class="amount" id="slip_total_deductions"></td>
                     </tr>
                 </tbody>
@@ -255,15 +263,23 @@
         generatePayslip();
     });
 
-    // --- RE-ADDED PDF FUNCTION using html2pdf.js ---
+    // --- UPDATED PDF FUNCTION (Hides form for export) ---
     function savePayslipAsPDF() {
-        const element = document.getElementById('payslip-container');
         // Ensure data is up-to-date before saving
         generatePayslip(); 
-        
+
         const monthYear = document.getElementById('slip_month_display').textContent.replace(/\s/g, '_');
         const name = document.getElementById('input_name').value;
         const filename = `Payslip_${name}_${monthYear}.pdf`;
+
+        // Get the elements
+        const formElement = document.querySelector('.input-form');
+        const containerElement = document.getElementById('payslip-container');
+
+        // --- HIDE THE FORM AND ADJUST STYLES FOR PDF ---
+        formElement.style.display = 'none'; 
+        containerElement.style.boxShadow = 'none'; // Remove shadow
+        containerElement.style.border = 'none'; // Remove border
         
         // Configuration for html2pdf
         const options = {
@@ -274,10 +290,111 @@
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // Select the element and save the PDF
-        html2pdf().set(options).from(element).save();
+        // Select the container (which no longer shows the form) and save
+        html2pdf().set(options).from(containerElement).save().then(() => {
+            // --- RESTORE THE FORM AND STYLES ---
+            formElement.style.display = 'block';
+            containerElement.style.boxShadow = '0 0 10px rgba(0,0,0,0.1)';
+            containerElement.style.border = '1px solid #ccc';
+        });
     }
     // ------------------------------------------------
+
+    // --- NEW: Function to save as .DOC (HTML trick) ---
+    function savePayslipAsDOC() {
+        // Ensure data is up-to-date
+        generatePayslip();
+
+        // Get the HTML of the payslip content
+        const headerHTML = document.querySelector('.header').outerHTML;
+        const payslipHTML = document.querySelector('.payslip').outerHTML;
+        
+        // Get all styles to embed them
+        let styles = '';
+        for (let sheet of document.styleSheets) {
+            try {
+                for (let rule of sheet.cssRules) {
+                    styles += rule.cssText + '\n';
+                }
+            } catch (e) {
+                console.warn("Can't read cross-origin stylesheet", e);
+            }
+        }
+
+        // Combine into a full HTML document string
+        const fullHTML = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>Salary Slip</title>
+                <style>
+                    /* Embed all styles */
+                    ${styles}
+                    /* Add specific styles for DOC compatibility */
+                    body { margin: 20px; }
+                    .input-form { display: none !important; }
+                    .generator-section { display: block !important; }
+                    .payslip { width: 100% !important; border: none; }
+                    .container { max-width: 800px; margin: auto; border: none; box-shadow: none; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    ${headerHTML}
+                    <div class="generator-section">
+                        ${payslipHTML}
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        const monthYear = document.getElementById('slip_month_display').textContent.replace(/\s/g, '_');
+        const name = document.getElementById('input_name').value;
+        const filename = `Payslip_${name}_${monthYear}.doc`;
+
+        // Create a blob and download link
+        const blob = new Blob(['\ufeff', fullHTML], {
+            type: 'application/msword'
+        });
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // --- NEW: Event Listener for Share Button ---
+    document.getElementById('shareEmailBtn').addEventListener('click', function() {
+        // Ensure payslip data is current
+        generatePayslip();
+
+        const email = document.getElementById('input_email').value;
+        const name = document.getElementById('input_name').value;
+        const month = document.getElementById('slip_month_display').textContent;
+        const cc = 'harvinder@groundupasia.com';
+        
+        if (!email) {
+            alert('Please enter an employee email address.');
+            return;
+        }
+
+        const subject = `Salary Slip for ${name} - ${month}`;
+        // Note: The user will have to manually attach the PDF.
+        const body = `Hi ${name},\n\nPlease find your salary slip for ${month} attached.\n\n(Note: Please generate and attach the PDF before sending this email.)\n\nBest regards,\nGroundup`;
+        
+        let mailtoLink = `mailto:${email}?cc=${cc}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        
+        // This will open the user's default email client
+        window.location.href = mailtoLink;
+    });
+
+    // --- NEW: Event Listener for Save as DOC Button ---
+    document.getElementById('saveDocBtn').addEventListener('click', savePayslipAsDOC);
+
 
     // Helper function to convert number to Indian currency words
     function numberToWords(n) {
@@ -342,11 +459,12 @@
         const monthYear = new Date(monthInput + '-01').toLocaleString('en-US', { month: 'long', year: 'numeric' });
 
         const name = document.getElementById('input_name').value;
+        const email = document.getElementById('input_email').value; // NEW
         const designation = document.getElementById('input_designation').value;
         const pan = document.getElementById('input_pan').value;
         
         // Example fixed/common components (customize if needed)
-        const region = 'Eastern Himalayas (Example)'; 
+        // const region = 'Eastern Himalayas (Example)'; // REMOVED
         const specialAllowance = 19300; 
         const lta = 2000; 
 
@@ -371,9 +489,10 @@
         
         // Employee Details
         document.getElementById('slip_name').textContent = name;
+        document.getElementById('slip_email').textContent = email; // NEW
         document.getElementById('slip_designation').textContent = designation;
         document.getElementById('slip_pan').textContent = pan;
-        document.getElementById('slip_region').textContent = region;
+        // document.getElementById('slip_region').textContent = region; // REMOVED
         document.getElementById('slip_paid_leaves').textContent = paidLeaves;
         document.getElementById('slip_unpaid_leaves').textContent = unpaidLeaves;
         
