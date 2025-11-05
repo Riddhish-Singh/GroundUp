@@ -153,7 +153,9 @@
                 </div>
 
                 <button type="submit">Generate / Update Payslip</button>
+                
                 <button type="button" onclick="window.print()" style="background-color: #28a745;">Print Payslip</button>
+                
                 <button type="button" onclick="savePayslipAsPDF()" style="background-color: #dc3545;">Save as PDF</button>
             </form>
         </div>
@@ -253,9 +255,12 @@
         generatePayslip();
     });
 
-    // --- NEW PDF FUNCTION ---
+    // --- RE-ADDED PDF FUNCTION using html2pdf.js ---
     function savePayslipAsPDF() {
         const element = document.getElementById('payslip-container');
+        // Ensure data is up-to-date before saving
+        generatePayslip(); 
+        
         const monthYear = document.getElementById('slip_month_display').textContent.replace(/\s/g, '_');
         const name = document.getElementById('input_name').value;
         const filename = `Payslip_${name}_${monthYear}.pdf`;
@@ -272,7 +277,7 @@
         // Select the element and save the PDF
         html2pdf().set(options).from(element).save();
     }
-    // ------------------------
+    // ------------------------------------------------
 
     // Helper function to convert number to Indian currency words
     function numberToWords(n) {
