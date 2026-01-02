@@ -9,7 +9,7 @@
     <style>
         /* Base styles to replicate the professional, tabular look */
         body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border: 1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.1); } 
+        .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border: 1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.1); } 
 
         /* Header and Logo */
         .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
@@ -25,7 +25,6 @@
 
         /* Two-Column Generator Layout */
         .generator-section { display: flex; gap: 30px; }
-        .input-form, .payslip { padding: 0; border: none; border-radius: 0; }
         .input-form { width: 35%; background-color: #f9f9f9; padding: 15px; border: 1px solid #ddd; border-radius: 5px;}
         .payslip { width: 65%; background-color: #fff; padding: 10px 0; }
 
@@ -38,14 +37,14 @@
         .input-form button:hover { background-color: #0056b3; }
 
         /* Payslip table structure */
-        .payslip-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 10px; }
-        .payslip-table th, .payslip-table td { border: 1px solid #000; padding: 8px; text-align: left; }
+        .payslip-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; }
+        .payslip-table th, .payslip-table td { border: 1px solid #000; padding: 6px 8px; text-align: left; }
         .payslip-table th { background-color: #eee; font-weight: bold; text-align: center; }
 
         /* Employee Details Section */
         .payslip-details { margin-bottom: 15px; }
         .payslip-details table { width: 100%; border-collapse: collapse; table-layout: fixed;}
-        .payslip-details td { padding: 5px 10px; border: 1px solid #000; font-size: 0.9rem; }
+        .payslip-details td { padding: 5px 10px; border: 1px solid #000; font-size: 0.85rem; }
         .payslip-details .label { font-weight: bold; width: 25%; background-color: #f1f1f1; }
         .payslip-details .value { width: 25%; }
 
@@ -126,8 +125,24 @@
                     <input type="number" id="input_hra" value="15000" required>
                 </div>
                 <div class="form-group">
+                    <label for="input_lta">LTA:</label>
+                    <input type="number" id="input_lta" value="2000">
+                </div>
+                <div class="form-group">
+                    <label for="input_conveyance">Conveyance Allowance:</label>
+                    <input type="number" id="input_conveyance" value="1600">
+                </div>
+                <div class="form-group">
+                    <label for="input_medical">Medical Allowance:</label>
+                    <input type="number" id="input_medical" value="1250">
+                </div>
+                <div class="form-group">
+                    <label for="input_sa">Special Allowance/Other:</label>
+                    <input type="number" id="input_sa" value="15000">
+                </div>
+                <div class="form-group">
                     <label for="input_arrears">Arrears/Incentive:</label>
-                    <input type="number" id="input_arrears" value="75000">
+                    <input type="number" id="input_arrears" value="0">
                 </div>
 
                 <div class="form-title" style="margin-top: 20px;">Deductions</div>
@@ -201,10 +216,28 @@
                         <td class="amount" id="slip_tds"></td>
                     </tr>
                     <tr>
+                        <td>Leave Travel Allowance</td>
+                        <td class="amount" id="slip_lta"></td>
+                        <td></td>
+                        <td class="amount"></td>
+                    </tr>
+                    <tr>
+                        <td>Conveyance Allowance</td>
+                        <td class="amount" id="slip_conveyance"></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Medical Allowance</td>
+                        <td class="amount" id="slip_medical"></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
                         <td>Special Allowance/Other</td>
                         <td class="amount" id="slip_sa"></td>
                         <td></td>
-                        <td class="amount"></td>
+                        <td></td>
                     </tr>
                     <tr>
                         <td>Arrears/Incentive</td>
@@ -306,23 +339,30 @@
         document.getElementById('slip_unpaid_leaves').textContent = document.getElementById('input_unpaid_leaves').value || 0;
         
         // Calculations
-        const specialAllowance = 19300; 
-        const lta = 2000; 
         const basic = parseFloat(document.getElementById('input_basic').value) || 0;
         const hra = parseFloat(document.getElementById('input_hra').value) || 0;
+        const lta = parseFloat(document.getElementById('input_lta').value) || 0;
+        const conveyance = parseFloat(document.getElementById('input_conveyance').value) || 0;
+        const medical = parseFloat(document.getElementById('input_medical').value) || 0;
+        const specialAllowance = parseFloat(document.getElementById('input_sa').value) || 0;
         const arrears = parseFloat(document.getElementById('input_arrears').value) || 0;
+        
         const pt = parseFloat(document.getElementById('input_pt').value) || 0;
         const tds = parseFloat(document.getElementById('input_tds').value) || 0;
 
-        const totalEarnings = basic + hra + lta + specialAllowance + arrears;
+        const totalEarnings = basic + hra + lta + conveyance + medical + specialAllowance + arrears;
         const totalDeductions = pt + tds; 
         const netSalary = totalEarnings - totalDeductions;
 
         // Populate Table
         document.getElementById('slip_basic').textContent = formatCurrency(basic);
         document.getElementById('slip_hra').textContent = formatCurrency(hra);
-        document.getElementById('slip_sa').textContent = formatCurrency(specialAllowance + lta); 
+        document.getElementById('slip_lta').textContent = formatCurrency(lta);
+        document.getElementById('slip_conveyance').textContent = formatCurrency(conveyance);
+        document.getElementById('slip_medical').textContent = formatCurrency(medical);
+        document.getElementById('slip_sa').textContent = formatCurrency(specialAllowance); 
         document.getElementById('slip_arrears').textContent = formatCurrency(arrears);
+        
         document.getElementById('slip_pt').textContent = formatCurrency(pt);
         document.getElementById('slip_tds').textContent = formatCurrency(tds);
 
