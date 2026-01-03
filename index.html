@@ -4,58 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Groundup Pay Slip Generator</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <style>
-        /* ================= SCREEN STYLES ================= */
+        /* Base styles */
         body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
         .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border: 1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.1); box-sizing: border-box; } 
 
-        /* Header */
+        /* Header and Logo */
         .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .header img { max-width: 150px; height: auto; margin-bottom: 10px; }
+        .header img { 
+            max-width: 150px; 
+            height: auto; 
+            margin-bottom: 10px; 
+            border: none; 
+            padding: 5px; 
+        }
         .header h1 { font-size: 1.8rem; color: #333; margin-bottom: 5px;}
         .header p { font-size: 1rem; color: #555; }
 
-        /* Layout */
+        /* Two-Column Generator Layout */
         .generator-section { display: flex; gap: 30px; }
         .input-form { width: 35%; background-color: #f9f9f9; padding: 15px; border: 1px solid #ddd; border-radius: 5px;}
         .payslip { width: 65%; background-color: #fff; padding: 10px 0; }
 
-        /* Inputs */
+        /* Form styling */
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 3px; color: #333; }
         .form-group input { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 3px; box-sizing: border-box; font-size: 0.9rem; }
         .form-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 10px; border-bottom: 2px solid #555; padding-bottom: 5px; color: #007bff; }
-        
-        /* Buttons */
-        .input-form button { width: 100%; padding: 10px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; margin-top: 15px; transition: 0.3s; }
-        .btn-generate { background-color: #007bff; }
-        .btn-generate:hover { background-color: #0056b3; }
-        .btn-download { background-color: #28a745; }
-        .btn-download:hover { background-color: #218838; }
-        
-        /* The Magic Button Style */
-        .btn-email { 
-            background: linear-gradient(90deg, #17a2b8, #117a8b); 
-            font-weight: bold; 
-            border: 1px solid #138496;
-        }
-        .btn-email:hover { 
-            background: linear-gradient(90deg, #138496, #0f6674); 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2); 
-        }
+        .input-form button { width: 100%; padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; margin-top: 15px; }
+        .input-form button:hover { background-color: #0056b3; }
 
-        /* Tables */
+        /* Payslip table structure */
         .payslip-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; }
         .payslip-table th, .payslip-table td { border: 1px solid #000; padding: 6px 8px; text-align: left; }
         .payslip-table th { background-color: #eee; font-weight: bold; text-align: center; }
 
+        /* Employee Details Section */
+        .payslip-details { margin-bottom: 15px; }
         .payslip-details table { width: 100%; border-collapse: collapse; table-layout: fixed;}
         .payslip-details td { padding: 5px 10px; border: 1px solid #000; font-size: 0.85rem; }
         .payslip-details .label { font-weight: bold; width: 25%; background-color: #f1f1f1; }
         .payslip-details .value { width: 25%; }
 
+        /* Totals and Net Payable */
         .total-row td { font-weight: bold; background-color: #e9e9e9; }
         .total-row td:nth-child(2), .total-row td:nth-child(4) { text-align: right; }
         .payslip-table td.amount { text-align: right; }
@@ -64,7 +57,9 @@
 
         .footer { text-align: left; margin-top: 30px; font-size: 0.8rem; padding-left: 50px; }
 
-        /* ================= PDF GENERATION STYLES (COMPACT MODE) ================= */
+        /* --- PDF GENERATION STYLES (COMPACT MODE) --- */
+        /* These styles ONLY apply when generating the PDF to ensure it fits on 1 page */
+        
         body.generating-pdf { background-color: white !important; padding: 0 !important; }
         body.generating-pdf .input-form { display: none !important; }
         body.generating-pdf .payslip { width: 100% !important; padding: 0 !important; }
@@ -73,19 +68,33 @@
             width: 700px !important; 
             max-width: 700px !important;
             margin: 0 auto !important;
-            box-shadow: none !important; border: none !important;
-            padding: 10px 20px !important; 
+            box-shadow: none !important;
+            border: none !important;
+            padding: 10px 20px !important; /* Reduced padding */
         }
-        /* Compact Elements */
+
+        /* COMPACT ELEMENTS FOR PDF */
         body.generating-pdf .header { margin-bottom: 10px; padding-bottom: 5px; }
-        body.generating-pdf .header img { max-width: 100px; margin-bottom: 5px; }
+        body.generating-pdf .header img { max-width: 100px; margin-bottom: 5px; } /* Smaller Logo */
         body.generating-pdf .header h1 { font-size: 1.5rem; margin-bottom: 2px; }
+        body.generating-pdf .header p { font-size: 0.9rem; margin: 0; }
+        
         body.generating-pdf .form-title { font-size: 1rem; margin-bottom: 5px; padding-bottom: 3px; }
-        body.generating-pdf .payslip-details td { padding: 4px 6px; font-size: 0.8rem; }
+        
+        body.generating-pdf .payslip-details { margin-bottom: 10px; }
+        body.generating-pdf .payslip-details td { padding: 4px 6px; font-size: 0.8rem; } /* Tighter cells */
+        
         body.generating-pdf .payslip-table { margin-top: 5px; font-size: 0.8rem; }
         body.generating-pdf .payslip-table th, 
-        body.generating-pdf .payslip-table td { padding: 4px 6px; }
-        body.generating-pdf .net-salary-section { margin-top: 15px; padding: 8px; font-size: 0.9rem; }
+        body.generating-pdf .payslip-table td { padding: 4px 6px; } /* Tighter table */
+        
+        body.generating-pdf .net-salary-section { 
+            margin-top: 15px; 
+            padding: 8px; 
+            font-size: 0.9rem; 
+            line-height: 1.4;
+        }
+
         body.generating-pdf .footer { margin-top: 20px; font-size: 0.75rem; padding-left: 20px; }
     </style>
 </head>
@@ -127,10 +136,6 @@
                 <div class="form-group">
                     <label for="input_bank">Bank Account No:</label>
                     <input type="text" id="input_bank" value="XXXX XXXX 1234">
-                </div>
-                 <div class="form-group">
-                    <label for="input_email">Employee Email (Optional):</label>
-                    <input type="email" id="input_email" placeholder="e.g. employee@groundupasia.com">
                 </div>
 
                 <div class="form-title" style="margin-top: 20px;">Attendance & Earnings</div>
@@ -181,9 +186,9 @@
                     <input type="number" id="input_tds" value="0" min="0" required>
                 </div>
 
-                <button type="submit" class="btn-generate">Generate / Update Payslip</button>
-                <button type="button" onclick="downloadPDF()" class="btn-download">Save as PDF</button>
-                <button type="button" id="generateEmailBtn" class="btn-email">Open Outlook Draft with Attachment</button>
+                <button type="submit">Generate / Update Payslip</button>
+                <button type="button" onclick="downloadPDF()" style="background-color: #28a745;">Save as PDF</button>
+                <button type="button" id="shareEmailBtn" style="background-color: #17a2b8;">Share via Email</button>
             </form>
         </div>
 
@@ -301,87 +306,33 @@
         generatePayslip();
     });
 
-    // ========================================================
-    // MAGIC FUNCTION: Generates an .EML file with PDF attached
-    // ========================================================
-    document.getElementById('generateEmailBtn').addEventListener('click', function() {
+    document.getElementById('shareEmailBtn').addEventListener('click', function() {
+        generatePayslip();
         const fullName = document.getElementById('input_name').value;
-        const toEmail = document.getElementById('input_email').value || "employee@groundupasia.com";
         const month = document.getElementById('slip_month_display').textContent;
-        const firstName = fullName.split(' ')[0];
-
         if (!fullName) { alert('Please enter an employee name.'); return; }
 
-        generatePayslip();
-
-        // 1. Generate PDF as BASE64 string
-        document.body.classList.add('generating-pdf');
-        const element = document.getElementById('payslip-container');
-
-        const opt = {
-            margin:       0.2, 
-            filename:     'payslip.pdf',
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, 
-            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-        };
-
-        html2pdf().set(opt).from(element).outputPdf('datauristring').then(function(pdfDataUri) {
-            document.body.classList.remove('generating-pdf');
-
-            // 2. Remove the "data:application/pdf;filename=...,base64," prefix
-            const pdfBase64 = pdfDataUri.split(',')[1];
-
-            // 3. Construct the MIME Email (.eml format)
-            const boundary = "------Boundary" + Math.random().toString(16).substr(2);
-            
-            let emlContent = "";
-            emlContent += "To: " + toEmail + "\n";
-            emlContent += "Subject: Pay Slip for " + fullName + " - " + month + "\n";
-            emlContent += "X-Unsent: 1\n"; // Marks it as Draft
-            emlContent += "Content-Type: multipart/mixed; boundary=\"" + boundary + "\"\n\n";
-
-            // -- Body Part
-            emlContent += "--" + boundary + "\n";
-            emlContent += "Content-Type: text/plain; charset=UTF-8\n\n";
-            emlContent += "Hi " + firstName + ",\n\nPlease find attached your pay slip for " + month + ".\n\nBest regards,\nGroundup\n\n";
-
-            // -- PDF Attachment Part
-            emlContent += "--" + boundary + "\n";
-            emlContent += "Content-Type: application/pdf; name=\"PaySlip_" + month + ".pdf\"\n";
-            emlContent += "Content-Transfer-Encoding: base64\n";
-            emlContent += "Content-Disposition: attachment; filename=\"PaySlip_" + month + ".pdf\"\n\n";
-            emlContent += pdfBase64 + "\n\n";
-
-            emlContent += "--" + boundary + "--";
-
-            // 4. Trigger Download of the .eml file
-            const blob = new Blob([emlContent], { type: 'message/rfc822' });
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = "Draft_PaySlip_" + firstName + ".eml";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // Instruction
-            setTimeout(() => {
-                alert("Email Draft Generated!\n\nA file has been downloaded. Click it to open Outlook with the PDF already attached.");
-            }, 500);
-
-        }).catch(err => {
-            console.error(err);
-            document.body.classList.remove('generating-pdf');
-        });
+        const firstName = fullName.split(' ')[0].toLowerCase();
+        const emailTo = `${firstName}@groundupasia.com`;
+        const cc = 'harvinder@groundupasia.com';
+        const subject = `Pay Slip for ${fullName} - ${month}`;
+        const body = `Hi ${fullName.split(' ')[0]},\n\nPlease find your pay slip for ${month} attached.\n\nBest regards,\nGroundup`;
+        
+        let outlookURL = `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(emailTo)}&cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.open(outlookURL, '_blank');
     });
 
-    // --- Standard PDF Download Function ---
+    // ROBUST PDF FUNCTION
     function downloadPDF() {
         generatePayslip();
         const empName = document.getElementById('input_name').value.trim() || 'Employee';
         const finalFileName = `${empName}_GroundUp Pay-Slip.pdf`;
+
+        // 1. Add class to BODY to visually force A4 layout on screen and apply compact styles
         document.body.classList.add('generating-pdf');
+
         const element = document.getElementById('payslip-container');
+
         const opt = {
             margin:       0.2, 
             filename:     finalFileName,
@@ -389,20 +340,24 @@
             html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, 
             jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
         };
+
+        // 2. Generate PDF from the now properly sized container
         html2pdf().set(opt).from(element).save().then(() => {
+            // 3. Remove class to restore original layout
             document.body.classList.remove('generating-pdf');
         }).catch((err) => {
             console.error(err);
+            // Ensure we restore layout even if error occurs
             document.body.classList.remove('generating-pdf');
         });
     }
 
-    // --- Helper Functions ---
     function numberToWords(n) {
         if (n === 0) return "ZERO RUPEES ONLY";
         const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
         const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
         const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
         const convertLessThanOneThousand = (num) => {
             let str = '';
             if (num >= 100) { str += units[Math.floor(num / 100)] + ' Hundred '; num %= 100; }
@@ -410,6 +365,7 @@
             else { str += tens[Math.floor(num / 10)] + ' ' + units[num % 10]; }
             return str.trim();
         };
+
         let num = Math.floor(n);
         let output = '';
         if (num >= 10000000) { output += convertLessThanOneThousand(Math.floor(num / 10000000)) + ' Crore '; num %= 10000000; }
@@ -437,6 +393,7 @@
         
         const dojValue = document.getElementById('input_doj').value;
         document.getElementById('slip_doj').textContent = dojValue ? new Date(dojValue).toLocaleDateString('en-GB') : 'N/A';
+
         document.getElementById('slip_paid_leaves').textContent = document.getElementById('input_paid_leaves').value || 0;
         document.getElementById('slip_unpaid_leaves').textContent = document.getElementById('input_unpaid_leaves').value || 0;
         
@@ -447,6 +404,7 @@
         const medical = parseFloat(document.getElementById('input_medical').value) || 0;
         const specialAllowance = parseFloat(document.getElementById('input_sa').value) || 0;
         const arrears = parseFloat(document.getElementById('input_arrears').value) || 0;
+        
         const pt = parseFloat(document.getElementById('input_pt').value) || 0;
         const tds = parseFloat(document.getElementById('input_tds').value) || 0;
 
@@ -461,6 +419,7 @@
         document.getElementById('slip_medical').textContent = formatCurrency(medical);
         document.getElementById('slip_sa').textContent = formatCurrency(specialAllowance); 
         document.getElementById('slip_arrears').textContent = formatCurrency(arrears);
+        
         document.getElementById('slip_pt').textContent = formatCurrency(pt);
         document.getElementById('slip_tds').textContent = formatCurrency(tds);
 
@@ -469,6 +428,7 @@
         document.getElementById('slip_net_salary').textContent = formatCurrency(netSalary);
         document.getElementById('slip_net_salary_in_words').textContent = numberToWords(netSalary);
     }
+    
     document.addEventListener('DOMContentLoaded', generatePayslip);
 </script>
 </body>
