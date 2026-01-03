@@ -9,7 +9,7 @@
     <style>
         /* Base styles */
         body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
-        .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border: 1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.1); } 
+        .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border: 1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.1); box-sizing: border-box; } 
 
         /* Header and Logo */
         .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
@@ -57,7 +57,7 @@
 
         .footer { text-align: left; margin-top: 30px; font-size: 0.8rem; padding-left: 50px; }
 
-        /* --- PDF GENERATION STYLES --- */
+        /* --- PDF GENERATION STYLES (CORRECTED) --- */
         /* This class is added to the body during PDF generation */
         body.generating-pdf .input-form {
             display: none !important; /* Hide form */
@@ -67,12 +67,14 @@
             padding: 0 !important;
         }
         body.generating-pdf .container {
-            width: 790px !important; /* Force A4 Width */
-            max-width: 790px !important;
+            /* FIXED: Reduced width to 750px to fit inside A4 margins (approx 794px total width) */
+            width: 750px !important; 
+            max-width: 750px !important;
             margin: 0 auto !important;
             box-shadow: none !important;
             border: none !important;
-            padding: 20px !important;
+            /* FIXED: Removed padding so it doesn't push content off the edge */
+            padding: 0px !important; 
         }
         body.generating-pdf {
             background-color: white !important; /* Remove grey background */
