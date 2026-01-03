@@ -306,23 +306,33 @@
         generatePayslip();
     });
 
+    // UPDATED EMAIL LOGIC
     document.getElementById('shareEmailBtn').addEventListener('click', function() {
-        generatePayslip();
         const fullName = document.getElementById('input_name').value;
         const month = document.getElementById('slip_month_display').textContent;
+
         if (!fullName) { alert('Please enter an employee name.'); return; }
 
-        const firstName = fullName.split(' ')[0].toLowerCase();
-        const emailTo = `${firstName}@groundupasia.com`;
-        const cc = 'harvinder@groundupasia.com';
-        const subject = `Pay Slip for ${fullName} - ${month}`;
-        const body = `Hi ${fullName.split(' ')[0]},\n\nPlease find your pay slip for ${month} attached.\n\nBest regards,\nGroundup`;
-        
-        let outlookURL = `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(emailTo)}&cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        window.open(outlookURL, '_blank');
+        // 1. Trigger the download first so the file is ready for them
+        downloadPDF();
+
+        // 2. Alert the user (Short delay to ensure download starts)
+        setTimeout(() => {
+            alert(`The PDF has been downloaded to your computer.\n\nPlease attach it manually to the email draft that will open next.`);
+            
+            // 3. Open the email draft
+            const firstName = fullName.split(' ')[0].toLowerCase();
+            const emailTo = `${firstName}@groundupasia.com`;
+            const cc = 'harvinder@groundupasia.com';
+            const subject = `Pay Slip for ${fullName} - ${month}`;
+            const body = `Hi ${fullName.split(' ')[0]},\n\nPlease find your pay slip for ${month} attached.\n\nBest regards,\nGroundup`;
+            
+            let outlookURL = `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(emailTo)}&cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.open(outlookURL, '_blank');
+        }, 1000); // 1 second delay
     });
 
-    // ROBUST PDF FUNCTION
+    // ROBUST PDF FUNCTION (Compact for 1 Page)
     function downloadPDF() {
         generatePayslip();
         const empName = document.getElementById('input_name').value.trim() || 'Employee';
@@ -347,7 +357,6 @@
             document.body.classList.remove('generating-pdf');
         }).catch((err) => {
             console.error(err);
-            // Ensure we restore layout even if error occurs
             document.body.classList.remove('generating-pdf');
         });
     }
