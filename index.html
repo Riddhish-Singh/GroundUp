@@ -7,7 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <style>
-        /* Base styles to replicate the professional, tabular look */
+        /* Base styles */
         body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
         .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border: 1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.1); } 
 
@@ -57,13 +57,26 @@
 
         .footer { text-align: left; margin-top: 30px; font-size: 0.8rem; padding-left: 50px; }
 
-        /* Print Styles */
-        @media print {
-            .input-form { display: none; }
-            .generator-section { display: block; }
-            .payslip { width: 100%; padding: 0; border: none; }
-            .container { box-shadow: none; border: none; padding: 0; }
-            .header { border-bottom: 1px solid #000; }
+        /* --- PDF GENERATION STYLES --- */
+        /* This class is added to the body during PDF generation */
+        body.generating-pdf .input-form {
+            display: none !important; /* Hide form */
+        }
+        body.generating-pdf .payslip {
+            width: 100% !important; /* Payslip takes full width */
+            padding: 0 !important;
+        }
+        body.generating-pdf .container {
+            width: 790px !important; /* Force A4 Width */
+            max-width: 790px !important;
+            margin: 0 auto !important;
+            box-shadow: none !important;
+            border: none !important;
+            padding: 20px !important;
+        }
+        body.generating-pdf {
+            background-color: white !important; /* Remove grey background */
+            padding: 0 !important;
         }
     </style>
 </head>
@@ -156,7 +169,7 @@
                 </div>
 
                 <button type="submit">Generate / Update Payslip</button>
-                <button type="button" onclick="window.print()" style="background-color: #28a745;">Print (or Save as PDF)</button>
+                <button type="button" onclick="downloadPDF()" style="background-color: #28a745;">Save as PDF</button>
                 <button type="button" id="shareEmailBtn" style="background-color: #17a2b8;">Share via Email</button>
             </form>
         </div>
@@ -291,6 +304,36 @@
         window.open(outlookURL, '_blank');
     });
 
+    // ROBUST PDF FUNCTION
+    function downloadPDF() {
+        generatePayslip();
+        const empName = document.getElementById('input_name').value.trim() || 'Employee';
+        const finalFileName = `${empName}_GroundUp Pay-Slip.pdf`;
+
+        // 1. Add class to BODY to visually force A4 layout on screen
+        document.body.classList.add('generating-pdf');
+
+        const element = document.getElementById('payslip-container');
+
+        const opt = {
+            margin:       0.2, 
+            filename:     finalFileName,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, 
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+
+        // 2. Generate PDF from the now properly sized container
+        html2pdf().set(opt).from(element).save().then(() => {
+            // 3. Remove class to restore original layout
+            document.body.classList.remove('generating-pdf');
+        }).catch((err) => {
+            console.error(err);
+            // Ensure we restore layout even if error occurs
+            document.body.classList.remove('generating-pdf');
+        });
+    }
+
     function numberToWords(n) {
         if (n === 0) return "ZERO RUPEES ONLY";
         const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
@@ -323,7 +366,6 @@
         const dateObj = new Date(monthInput + '-01');
         const monthYear = dateObj.toLocaleString('en-US', { month: 'long', year: 'numeric' });
 
-        // Populate basic info
         document.getElementById('slip_month_display').textContent = monthYear;
         document.getElementById('slip_pay_period').textContent = monthYear;
         document.getElementById('slip_name').textContent = document.getElementById('input_name').value;
@@ -331,14 +373,12 @@
         document.getElementById('slip_pan').textContent = document.getElementById('input_pan').value;
         document.getElementById('slip_bank').textContent = document.getElementById('input_bank').value;
         
-        // Handle DOJ format
         const dojValue = document.getElementById('input_doj').value;
         document.getElementById('slip_doj').textContent = dojValue ? new Date(dojValue).toLocaleDateString('en-GB') : 'N/A';
 
         document.getElementById('slip_paid_leaves').textContent = document.getElementById('input_paid_leaves').value || 0;
         document.getElementById('slip_unpaid_leaves').textContent = document.getElementById('input_unpaid_leaves').value || 0;
         
-        // Calculations
         const basic = parseFloat(document.getElementById('input_basic').value) || 0;
         const hra = parseFloat(document.getElementById('input_hra').value) || 0;
         const lta = parseFloat(document.getElementById('input_lta').value) || 0;
@@ -354,7 +394,6 @@
         const totalDeductions = pt + tds; 
         const netSalary = totalEarnings - totalDeductions;
 
-        // Populate Table
         document.getElementById('slip_basic').textContent = formatCurrency(basic);
         document.getElementById('slip_hra').textContent = formatCurrency(hra);
         document.getElementById('slip_lta').textContent = formatCurrency(lta);
