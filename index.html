@@ -57,28 +57,45 @@
 
         .footer { text-align: left; margin-top: 30px; font-size: 0.8rem; padding-left: 50px; }
 
-        /* --- PDF GENERATION STYLES (CORRECTED) --- */
-        /* This class is added to the body during PDF generation */
-        body.generating-pdf .input-form {
-            display: none !important; /* Hide form */
-        }
-        body.generating-pdf .payslip {
-            width: 100% !important; /* Payslip takes full width */
-            padding: 0 !important;
-        }
+        /* --- PDF GENERATION STYLES (COMPACT MODE) --- */
+        /* These styles ONLY apply when generating the PDF to ensure it fits on 1 page */
+        
+        body.generating-pdf { background-color: white !important; padding: 0 !important; }
+        body.generating-pdf .input-form { display: none !important; }
+        body.generating-pdf .payslip { width: 100% !important; padding: 0 !important; }
+        
         body.generating-pdf .container {
-            /* FIXED: Reduced width to 700px to ensure a safe right margin */
             width: 700px !important; 
             max-width: 700px !important;
             margin: 0 auto !important;
             box-shadow: none !important;
             border: none !important;
-            padding: 0px !important; 
+            padding: 10px 20px !important; /* Reduced padding */
         }
-        body.generating-pdf {
-            background-color: white !important; /* Remove grey background */
-            padding: 0 !important;
+
+        /* COMPACT ELEMENTS FOR PDF */
+        body.generating-pdf .header { margin-bottom: 10px; padding-bottom: 5px; }
+        body.generating-pdf .header img { max-width: 100px; margin-bottom: 5px; } /* Smaller Logo */
+        body.generating-pdf .header h1 { font-size: 1.5rem; margin-bottom: 2px; }
+        body.generating-pdf .header p { font-size: 0.9rem; margin: 0; }
+        
+        body.generating-pdf .form-title { font-size: 1rem; margin-bottom: 5px; padding-bottom: 3px; }
+        
+        body.generating-pdf .payslip-details { margin-bottom: 10px; }
+        body.generating-pdf .payslip-details td { padding: 4px 6px; font-size: 0.8rem; } /* Tighter cells */
+        
+        body.generating-pdf .payslip-table { margin-top: 5px; font-size: 0.8rem; }
+        body.generating-pdf .payslip-table th, 
+        body.generating-pdf .payslip-table td { padding: 4px 6px; } /* Tighter table */
+        
+        body.generating-pdf .net-salary-section { 
+            margin-top: 15px; 
+            padding: 8px; 
+            font-size: 0.9rem; 
+            line-height: 1.4;
         }
+
+        body.generating-pdf .footer { margin-top: 20px; font-size: 0.75rem; padding-left: 20px; }
     </style>
 </head>
 <body>
@@ -311,7 +328,7 @@
         const empName = document.getElementById('input_name').value.trim() || 'Employee';
         const finalFileName = `${empName}_GroundUp Pay-Slip.pdf`;
 
-        // 1. Add class to BODY to visually force A4 layout on screen
+        // 1. Add class to BODY to visually force A4 layout on screen and apply compact styles
         document.body.classList.add('generating-pdf');
 
         const element = document.getElementById('payslip-container');
